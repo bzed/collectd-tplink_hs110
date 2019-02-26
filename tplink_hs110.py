@@ -20,6 +20,7 @@ Collect power usage data from TP-Link HS110 SmartPlugs.
 """
 
 import collectd
+import re
 from pyHS100 import SmartPlug
 from pprint import pformat as pf
 
@@ -51,21 +52,28 @@ def configure(configobj):
 
 def read(data=None):
     # {u'current': 0.685227,#012 u'power': 87.350224,#012 u'total': 1.423,#012 u'voltage': 234.660149}
+    # {u'total_wh': 4474, u'current_ma': 9099, u'power_mw': 2245448, u'voltage_mv': 249459}
+
     global plugs
 
     for name, plug in plugs.items():
         plugin_instance = name
         measurements = plug.get_emeter_realtime()
 
-        data = ['current', 'power', 'voltage', 'total']
+        data = measurements.keys()
         for i in data:
-            if i == 'total':
+            type_instance = re.sub('_.*', '', i)
+            if 'total' == type_instance:
                 _type = 'power'
             else:
-                _type = i
-            p = collectd.Values(type=_type, type_instance=i, plugin_instance=plugin_instance)
+                _type = type_instance
+            p = collectd.Values(type=_type, type_instance=type_instance, plugin_instance=plugin_instance)
             p.plugin = PLUGIN_NAME
-            p.values = [ measurements[i]]
+            measurement = measurements[i]
+            if '_m' in i:
+                # measurement is in milli volt/watt/ampere
+                measurement = measurement / 1000
+            p.values = [ measurement ]
             p.dispatch()
 
 collectd.register_config(configure)
