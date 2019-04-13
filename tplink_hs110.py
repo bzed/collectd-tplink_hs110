@@ -72,7 +72,7 @@ def read(data=None):
             measurement = measurements[i]
             if '_m' in i:
                 # measurement is in milli volt/watt/ampere
-                measurement = measurement / 1000
+                measurement = measurement / 1000.0
             p.values = [ measurement ]
             p.dispatch()
 
