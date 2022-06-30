@@ -39,11 +39,11 @@ def configure(configobj):
     config = {c.key: c.values[0] for c in configobj.children}
     collectd.info('tplink_hs110: Configured hs110 name/ip: %r' % (config))
 
-    for name, ip in config.items():
+    for name, ip in list(config.items()):
         try:
             plug = SmartPlug(ip)
             collectd.info('tplink_hs110: %s' % pf(plug.hw_info))
-        except Exception, e:
+        except Exception as e:
             collectd.error('tplink_hs110: Failed to connect to %s - %s' %(name, ip))
         else:
             collectd.info('tplink_hs110: Connected to %s - %s' %(name, ip))
@@ -56,11 +56,11 @@ def read(data=None):
 
     global plugs
 
-    for name, plug in plugs.items():
+    for name, plug in list(plugs.items()):
         plugin_instance = name
         measurements = plug.get_emeter_realtime()
 
-        data = measurements.keys()
+        data = list(measurements.keys())
         for i in data:
             type_instance = re.sub('_.*', '', i)
             if 'total' == type_instance:
